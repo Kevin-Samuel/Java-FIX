@@ -4,4 +4,12 @@
   <artifactId>fix</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>fix-protocol</name>
+  <dependencies>
+  <dependency>
+	<groupId>junit</groupId>
+	<artifactId>junit</artifactId>
+	<version>4.10</version>
+</dependency>
+            
+  </dependencies>
 </project>
