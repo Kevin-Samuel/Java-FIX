@@ -1,6 +1,8 @@
 package be.tritschler.fix.core.tags;
 
-import be.tritschler.utils.StringUtils;
+import be.tritschler.fix.utils.StringUtils;
+
+
 
 public abstract class Tag {
 	

@@ -1,13 +1,14 @@
 package be.tritschler.fix.core.message;
 
-import be.tritschler.fix.tags.ClOrdID;
-import be.tritschler.fix.tags.HandInst;
-import be.tritschler.fix.tags.MsgType;
-import be.tritschler.fix.tags.OrdType;
-import be.tritschler.fix.tags.OrderQty;
-import be.tritschler.fix.tags.Side;
-import be.tritschler.fix.tags.Symbol;
-import be.tritschler.fix.tags.Tag;
+import be.tritschler.fix.core.tags.ClOrdID;
+import be.tritschler.fix.core.tags.HandInst;
+import be.tritschler.fix.core.tags.MsgType;
+import be.tritschler.fix.core.tags.OrdType;
+import be.tritschler.fix.core.tags.OrderQty;
+import be.tritschler.fix.core.tags.Side;
+import be.tritschler.fix.core.tags.Symbol;
+
+
 
 public class NewOrderSingle extends Message {
 	

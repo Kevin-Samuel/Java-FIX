@@ -1,6 +1,8 @@
 package be.tritschler.fix.core.tags;
 
-import be.tritschler.utils.StringUtils;
+import be.tritschler.fix.utils.StringUtils;
+
+
 
 public class OrdType extends Tag {	
  	
@@ -30,7 +32,10 @@ public class OrdType extends Tag {
 	
 	@Override
 	public boolean isValid(String tag) {
-		if (!isValidStructure(tag)) return false;
+		if (!isValidStructure(tag)) {
+			return false;
+		}
+		
 		return StringUtils.isInStringArray(getTagValue(tag),
 				MARKET, LIMIT, STOP, STOP_LIMIT, MKT_ON_CLOSE, WITH_WITHOUT, LIMIT_OR_BETTER,
 				LIMIT_WITH_WITHOUT, ON_BASIS, ON_CLOSE, LIMIT_ON_CLOSE, FOREX, PREV_QUOTED,

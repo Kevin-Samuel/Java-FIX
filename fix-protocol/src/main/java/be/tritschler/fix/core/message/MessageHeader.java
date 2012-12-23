@@ -2,8 +2,17 @@ package be.tritschler.fix.core.message;
 
 import java.util.LinkedHashMap;
 
-import be.tritschler.fix.tags.*;
-import be.tritschler.utils.*;
+import be.tritschler.fix.core.tags.BeginString;
+import be.tritschler.fix.core.tags.BodyLength;
+import be.tritschler.fix.core.tags.Constants;
+import be.tritschler.fix.core.tags.MsgSeqNum;
+import be.tritschler.fix.core.tags.MsgType;
+import be.tritschler.fix.core.tags.SenderCompID;
+import be.tritschler.fix.core.tags.SendingTime;
+import be.tritschler.fix.core.tags.Tag;
+import be.tritschler.fix.core.tags.TargetCompID;
+
+
 
 public class MessageHeader {
 

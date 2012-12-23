@@ -1,6 +1,8 @@
 package be.tritschler.fix.core.tags;
 
-import be.tritschler.fix.messages.DataType;
+import be.tritschler.fix.core.message.DataType;
+
+
 
 public class HeartBtInt extends Tag {
 

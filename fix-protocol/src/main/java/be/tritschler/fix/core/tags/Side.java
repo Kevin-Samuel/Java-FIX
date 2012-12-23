@@ -1,6 +1,7 @@
 package be.tritschler.fix.core.tags;
 
-import be.tritschler.utils.StringUtils;
+import be.tritschler.fix.utils.StringUtils;
+
 
 public class Side extends Tag {
 

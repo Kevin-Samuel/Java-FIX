@@ -1,6 +1,8 @@
 package be.tritschler.fix.core.tags;
 
-import be.tritschler.utils.StringUtils;
+import be.tritschler.fix.utils.StringUtils;
+
+
 
 public class MsgType extends Tag {
 	
@@ -43,7 +45,9 @@ public class MsgType extends Tag {
 	
 	@Override
 	public boolean isValid(String tag) {
-		if (!isValidStructure(tag)) return false;			
+		if (!isValidStructure(tag)) {
+			return false;			
+		}
 		if (StringUtils.isInStringArray(getTagValue(tag), 
 				TYPE_HEARTBEAT,	TYPE_TEST_REQ, TYPE_RESEND_REQ, TYPE_REJECT, TYPE_SEQ_RESET,
 				TYPE_LOGOUT, TYPE_IOI, TYPE_ADVERT, TYPE_EXEC_REPORT, TYPE_ORDER_CX_REJ,

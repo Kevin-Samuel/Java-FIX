@@ -3,6 +3,20 @@ package be.tritschler.fix.core.message;
 import java.util.LinkedHashMap;
 
 import be.tritschler.fix.core.tags.BeginString;
+import be.tritschler.fix.core.tags.BodyLength;
+import be.tritschler.fix.core.tags.CheckSum;
+import be.tritschler.fix.core.tags.Constants;
+import be.tritschler.fix.core.tags.DeliverToCompID;
+import be.tritschler.fix.core.tags.MsgSeqNum;
+import be.tritschler.fix.core.tags.MsgType;
+import be.tritschler.fix.core.tags.OnBehalfOfCompID;
+import be.tritschler.fix.core.tags.SecureData;
+import be.tritschler.fix.core.tags.SecureDataLen;
+import be.tritschler.fix.core.tags.SenderCompID;
+import be.tritschler.fix.core.tags.SendingTime;
+import be.tritschler.fix.core.tags.Signature;
+import be.tritschler.fix.core.tags.SignatureLength;
+import be.tritschler.fix.core.tags.TargetCompID;
 
 
 public class Message {
@@ -25,7 +39,9 @@ public class Message {
 	public void setTag(String tagid, String value) {
 		if (tagid != null && value != null) {
 			tags.put(tagid, value);
-			if (tagid.equals(MsgType.TAG)) msgtype = value;
+			if (tagid.equals(MsgType.TAG)) {
+				msgtype = value;
+			}
 		}
 	}
 	

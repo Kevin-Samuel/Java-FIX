@@ -1,6 +1,6 @@
 package be.tritschler.fix.core.tags;
 
-import be.tritschler.utils.StringUtils;
+//import be.tritschler.utils.StringUtils; // TODO implement
 
 public class EncryptMethod extends Tag {
 
@@ -22,13 +22,16 @@ public class EncryptMethod extends Tag {
 	
 	@Override
 	public boolean isValid(String tag) {
-		if (!isValidStructure(tag)) return false;			
-		if (StringUtils.isInStringArray(getTagValue(tag), 
-				TYPE_NONE, TYPE_PKCS, TYPE_DES_EBC, TYPE_PKCS_DES, TYPE_PGP_DES,
-				TYPE_PGP_DES_MD5, TYPE_PEM_DES_MD5))
+		if (!isValidStructure(tag)) {
+			return false;			
+		}
+		// TODO implement
+//		if (StringUtils.isInStringArray(getTagValue(tag), 
+//				TYPE_NONE, TYPE_PKCS, TYPE_DES_EBC, TYPE_PKCS_DES, TYPE_PGP_DES,
+//				TYPE_PGP_DES_MD5, TYPE_PEM_DES_MD5))
 			return true;
-		else
-			return false;
+//		else
+//			return false;
 	}
 
 	@Override
