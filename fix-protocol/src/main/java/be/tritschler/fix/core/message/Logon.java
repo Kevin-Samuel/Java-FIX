@@ -16,12 +16,11 @@ public class Logon extends Message {
 		super();
 	}
 	
-	public Logon (String senderCompId,
-				  String targetCompId,			     
-				  int msgseqnum,
-				  String rawData) throws Exception {
+	public Logon (String senderCompId, String targetCompId,	int msgseqnum, String rawData) throws Exception {
 		this(senderCompId, targetCompId, msgseqnum);
-		if (rawData != null) setRawData(rawData);
+		if (rawData != null) {
+			setRawData(rawData);
+		}
 	}
 	
 	public Logon(String senderCompId,
