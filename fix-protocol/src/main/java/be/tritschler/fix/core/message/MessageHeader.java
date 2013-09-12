@@ -74,8 +74,11 @@ public class MessageHeader {
 			// TODO remaining optional tags
 		}
 		
-		if (!isSenderCompID || !isTargetCompID || !isMsgSeqNum || !isSendingTime) return false;
-		return true;
+		if (!isSenderCompID || !isTargetCompID || !isMsgSeqNum || !isSendingTime) {
+	            return false;
+		} else {
+		    return true;
+		}
 	}
 	
 }
