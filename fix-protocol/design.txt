@@ -1,0 +1,4 @@
+Design
+This is version 4.x implementation of the FIX protocol
+3 Flavors: Client (initiate session), Server, Proxy
+Core = create valid + parse FIX message + session
