@@ -1,3 +1,10 @@
+Principles
 * Zero config : use only default values
 * Java coding standards
 * Test Driven Development
+
+Technologies:
+* Java 6 or above
+* Maven 3
+* Log4J
+* HSQLDB via hibernate
