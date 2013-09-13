@@ -7,4 +7,5 @@ Technologies:
 * Java 6 or above
 * Maven 3
 * Log4J
+* JMX managed
 * HSQLDB via hibernate
