@@ -9,6 +9,7 @@ public class MsgType extends Tag {
 	public static final String TAG = "35";
 	public static final String NAME = "MsgType"; 
 	
+	
 	public static final String TYPE_HEARTBEAT          = "0";
 	public static final String TYPE_TEST_REQ           = "1";
 	public static final String TYPE_RESEND_REQ         = "2";
@@ -38,9 +39,8 @@ public class MsgType extends Tag {
 	public static final String TYPE_QUOTE              = "S";
 	public static final String TYPE_PRIVATE            = "U";	
 	
-	public MsgType() {
-		this.tagId = TAG;
-		this.tagName = NAME;
+	public MsgType(String value) {
+		super("35","MsgType",value);
 	}
 	
 	@Override
