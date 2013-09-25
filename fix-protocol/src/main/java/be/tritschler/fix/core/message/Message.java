@@ -19,7 +19,7 @@ import be.tritschler.fix.core.tags.SignatureLength;
 import be.tritschler.fix.core.tags.TargetCompID;
 
 
-public class Message {
+public abstract class Message {
 
 	protected String msgtype;	
 	private LinkedHashMap<String, String> tags = new LinkedHashMap<String, String>();
