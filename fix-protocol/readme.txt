@@ -4,8 +4,9 @@ Principles
 * Test Driven Development
 
 Technologies:
-* Java 6 or above
+* Java 7
 * Maven 3
 * Log4J
+* Ehcache
 * JMX managed
-* HSQLDB via hibernate
+* HSQLDB via hibernate/JPA
