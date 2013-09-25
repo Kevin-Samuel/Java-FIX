@@ -1,13 +1,21 @@
 package be.tritschler.fix.core.tags;
 
+import be.tritschler.fix.core.tags.v40.BeginString;
 import be.tritschler.fix.utils.StringUtils;
 
 
 
 public abstract class Tag {
 	
-	protected String tagId;
-	protected String tagName;
+	protected String id;
+	protected String name;
+	protected String value;
+	
+	public Tag(String id, String name, String value) {
+		this.id = id;
+		this.name = name;
+		this.value = value;
+	}
 	
 	public final boolean isValidStructure(String tag) {
 		if (tag == null) {
@@ -16,7 +24,7 @@ public abstract class Tag {
 		if (!isValidTagStructure(tag)) {
 			return false;
 		}
-		if (getTagId(tag).equals(tagId)) {
+		if (getTagId(tag).equals(id)) {
 			return false;
 		}
 		
@@ -52,11 +60,19 @@ public abstract class Tag {
 	}
 	
 	public static final boolean isValidTagStructure(String tag) {
-		if (tag == null) return false;
-		if (tag.length() < 3) return false;
+		if (tag == null) {
+			throw new NullPointerException("isValidTagStructure called with null argument!");
+		}
+		if (tag.length() < 3) {
+			return false;
+		}
 		String [] c = tag.split(Constants.EQUAL);
-		if (c.length<2) return false;
-		if (!isValidTagId(c[0], BeginString.VERSION)) return false;
+		if (c.length<2) {
+			return false;
+		}
+		if (!isValidTagId(c[0], BeginString.VERSION)) {
+			return false;
+		}
 		return true;
 	}
 	
@@ -91,8 +107,14 @@ public abstract class Tag {
 				CheckSum.TAG);
 	}
 	public final String getName() {
-		return this.tagName;
+		return this.name;
 	}	
 	public abstract boolean isValid(String tag);
-	public abstract int getGroupId();	
+	public abstract int getGroupId();
+	public void setValue(String value) {
+		this.value = value;
+	}
+	public String getValue() {
+		return value;
+	}
 }
