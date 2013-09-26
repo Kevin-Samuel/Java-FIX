@@ -19,6 +19,7 @@ public class Header {
 	MsgSeqNum msgSeqNum;
 	SendingTime sendingTime;
 	
+
 	// TODO Optional fields
 	//115 OnBehalfOfCompID	
 	//128 DeliverToCompID	
