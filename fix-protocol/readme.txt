@@ -3,6 +3,7 @@ Principles
 * Cloud/Clustering design
 * Java coding standards, Effective Java Programming
 * Test Driven Development
+* Logging to DB + logviewer app
 
 Technologies:
 * Java 7
