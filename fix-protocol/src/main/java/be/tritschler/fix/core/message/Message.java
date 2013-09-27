@@ -1,128 +1,82 @@
 package be.tritschler.fix.core.message;
 
-import java.util.LinkedHashMap;
-
-import be.tritschler.fix.core.tags.BeginString;
-import be.tritschler.fix.core.tags.BodyLength;
-import be.tritschler.fix.core.tags.CheckSum;
-import be.tritschler.fix.core.tags.Constants;
-import be.tritschler.fix.core.tags.DeliverToCompID;
-import be.tritschler.fix.core.tags.MsgSeqNum;
 import be.tritschler.fix.core.tags.MsgType;
-import be.tritschler.fix.core.tags.OnBehalfOfCompID;
-import be.tritschler.fix.core.tags.SecureData;
-import be.tritschler.fix.core.tags.SecureDataLen;
-import be.tritschler.fix.core.tags.SenderCompID;
-import be.tritschler.fix.core.tags.SendingTime;
-import be.tritschler.fix.core.tags.Signature;
-import be.tritschler.fix.core.tags.SignatureLength;
-import be.tritschler.fix.core.tags.TargetCompID;
 
+/**
+ * Builds the REJECT Message using the Builder pattern.
+ * 
+ * @author marc@tritschler.be
+ *
+ */
+public final class Reject extends Message {
 
-public abstract class Message {
-
-	protected String msgtype;	
-	private LinkedHashMap<String, String> tags = new LinkedHashMap<String, String>();
-	
-	public Message() {};
-	public Message(String senderCompId, String targetCompId, int msgseqnum) {
+	public static final String TYPE = MsgType.TYPE_REJECT;
 		
-	}
-	public void clear() {
-		tags.clear();
-	}
+	private final int refSeqNum;
+	private final String refTagID;
+	private final String refMsgType;
+	private final String sessionRejectReason;
+	private final String text;
+	private final String encodedTextLen;
+	private final String encodedText;
 	
-	public String getMsgtype() {
-		return msgtype;
-	}
-
-	public void setTag(String tagid, String value) {
-		if (tagid != null && value != null) {
-			tags.put(tagid, value);
-			if (tagid.equals(MsgType.TAG)) {
-				msgtype = value;
-			}
-		}
-	}
-	
-	@Override
-	public String toString() {
-		String msg = "";
+	public static class Builder {
+		// required parameter
+		private final int refSeqNum;
+		// optional parameters
+		private String refTagID = null;
+		private String refMsgType = null;
+		private String sessionRejectReason = null;
+		private String text  = null;
+		private String encodedTextLen  = null;
+		private String encodedText  = null;
 		
-		if (!isValid()) return "invalid";
-		setTag(BodyLength.TAG, computeBodyLength());
-		for(String key: tags.keySet()) {
-			msg += key + Constants.EQUAL + tags.get(key) + (char)Constants.SOH;
+		public Builder(int refSeqNum) {
+			this.refSeqNum = refSeqNum;
 		}
-		setTag(CheckSum.TAG, CheckSum.computeCheckSum(msg));   // not needed but to be complete
-		msg += CheckSum.TAG + Constants.EQUAL + CheckSum.computeCheckSum(msg);
-		return msg;
-	}
-	
-	public boolean isValid() {
-		return true;
-	}
-	
-	protected void buildHeader(String msgType, String senderCompId, String targetCompId, String msgseqnum) {
-		setTag(BeginString.TAG, BeginString.VERSION);
-		setTag(BodyLength.TAG, "000"); // dummy length ... will be computed later
-		setTag(MsgType.TAG, msgType);
-		setTag(SenderCompID.TAG, senderCompId);
-		setTag(TargetCompID.TAG, targetCompId);
-		setTag(MsgSeqNum.TAG, msgseqnum);
-		setTag(SendingTime.TAG, SendingTime.getSendingTime());
-	}
-	
-//	private void buildTrailer() {
-//		// SignatureLength
-//		// Signature
-//		setTag(CheckSum.TAG, "xxx");
-//	}		 
-	
-	private String computeBodyLength() {
-		int i=0;
-		for(String key: tags.keySet()) {
-			if (!key.equals(BeginString.TAG) &&
-				!key.equals(BodyLength.TAG)  &&
-				!key.equals(CheckSum.TAG)    &&
-				!key.equals(Signature.TAG)   &&
-				!key.equals(SignatureLength.TAG)) {
-//				System.out.println(key + "(" + key.length() + ") " + tags.get(key) + "(" + tags.get(key).length() + ")");
-				i+= key.length() + Constants.EQUAL.length() + tags.get(key).length() + 1;
-			}
-		}
-		return i+"";
-	}
-	
-	public void printTags() {
-		for(String key: tags.keySet()) {
-			System.out.println(key + ": " + tags.get(key));
-		}
-	}
-	
-	// optional fields of the header 
-	public void setOnBehalfOfCompID(String value) {
-		setTag(OnBehalfOfCompID.TAG, value);
-	}
-	
-	public void setDeliverToCompID(String value) {
-		setTag(DeliverToCompID.TAG, value);
-	}
-	
-	public void setSecureData(String value) {
-		setTag(SecureData.TAG, value);
-		setTag(SecureDataLen.TAG, value.length()+"");
-	}
-	
-	
-	// optional fields of the trailer
-	// Signature (+ length)
-	
-	public static void main(String ...args) {
-		Message message = new Message();
-		message.setTag(BeginString.TAG, "FIX.4.0");
-		message.setTag("9", "65");
 		
-		System.out.println(message.toString());
+		public Builder refTagID(String val) {
+			this.refTagID = val;
+			return this;
+		}
+		
+		public Builder refMsgType(String val) {
+			this.refMsgType = val;
+			return this;
+		}
+		
+		public Builder sessionRejectReason(String val) {
+			this.sessionRejectReason = val;
+			return this;
+		}
+		
+		public Builder text(String val) {
+			this.text = val;
+			return this;
+		}
+		
+		public Builder encodedTextLen(String val) {
+			this.encodedTextLen = val;
+			return this;
+		}
+		
+		public Builder encodedText(String val) {
+			this.encodedText = val;
+			return this;
+		}
+		
+		public Reject build() {
+			return new Reject(this);
+		}
+	}
+	
+	private Reject(Builder builder) {
+		refSeqNum = builder.refSeqNum;
+		refTagID = builder.refTagID;
+		refMsgType = builder.refMsgType;
+		sessionRejectReason = builder.sessionRejectReason;
+		text = builder.text;
+		encodedTextLen = builder.encodedTextLen;
+		encodedText = builder.encodedText;
 	}
 }
