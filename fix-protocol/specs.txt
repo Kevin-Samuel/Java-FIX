@@ -1,0 +1,9 @@
+Syntax
+Message=Header+Body+Trailer
+Header={tags}    = 8,9,35 + others
+Body={tags}
+Trailer={tags}    = [93], [89], 10
+tag="id=value"
+mandatory, optional, conditonally mandatory
+Session:
+logon, messages ...
