@@ -1,6 +1,7 @@
 Principles
 * Zero config : use only default values
-* Java coding standards
+* Cloud/Clustering design
+* Java coding standards, Effective Java Programming
 * Test Driven Development
 
 Technologies:
