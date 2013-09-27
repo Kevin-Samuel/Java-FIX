@@ -6,4 +6,6 @@ Trailer={tags}    = [93], [89], 10
 tag="id=value"
 mandatory, optional, conditonally mandatory
 Session:
-logon, messages ...
+Server: 1 wait logon, 2 messages ...
+Client: 1 send Logon, 2 wait ack, 
+Proxy: wait message, forward it
