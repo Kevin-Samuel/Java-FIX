@@ -1,6 +1,7 @@
 package be.tritschler.fix.apps;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -43,11 +44,11 @@ public class FixServer extends Thread {
 //		FixSession fixsess = new FixSession(name);		
 	}
 	
-	private static void initLogging() {
+	private void initLogging() {
 		boolean init = true;
 		// TODO 
 		if (init) {
-			logger.info("logging initialized.");
+			logger.info("[" + this.name + "] : logging initialized.");
 		} else {
 			System.out.println("--------- error initializing the Logging system ------");
 		}
@@ -61,95 +62,95 @@ public class FixServer extends Thread {
 		Message message = new Message();				
 		System.out.println("------- " + name + " started -------");
 		initLogging();
-			try {
-				int c;
-				String errMsg;
-				buffIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));  				
-		        while (true) {
-		        	tag = new StringBuilder();
-		        	c=buffIn.read();
-	           		while ((c != Constants.SOH) && (c != -1)) {
-	           			tag.append((char)c);
-	           			c=buffIn.read();
-	           		}	           		
-	           		if (c==-1) {
-	           			System.out.println("Client disconnected ...");
-	           			return;
-	           		}
-	           		
-	           		// read complete tag (id=value)
-	           		logger.debug("received " + tag);
-	           		errMsg = validateTag(tag.toString());
-	           		if (errMsg != null) {
-	           			logger.error(errMsg);
-	           			sendReject(0, errMsg);
-	           			continue;
-	           		}
-	           		tagId = Tag.getTagId(tag.toString());
-	           		if ((message.getTags() != null) && (message.getTags().containsKey(tagId))) {
-	           			logger.error("error: tag already received");
-	           			sendReject(0, errMsg);
-	           			continue;
-	           		}
-	           		
-	           		message.addTag(tagId, Tag.getTagValue(tag.toString())); 
-	           			           	
-	           		
-	           		if (parseState.equals(InternalParseState.ST_START_NEW_MESSAGE)) {
-	           			if (!tagId.equals(BeginString.TAG)) {
-		           			// expecting tag 8
-		           			System.out.println("expecting tag " + BeginString.TAG + " (" + BeginString.NAME + ")");
-		           			// TODO send Reject		           		
-		           			continue;
-	           			}
-	           			parseState = InternalParseState.ST_IN_HEADER;
-	           		} else if (parseState.equals(InternalParseState.ST_IN_HEADER)) {	           			
-	           			if (Tag.isTagInTrailer(tagId)) {
-	           				// may not receive a Trailer tag in header
-	           				System.out.println("Invalid tag received in header (" + tag + ")");
-	           				//TODO send Reject
-	           				continue;
-	           			} else if (Tag.isTagInBody(tagId)) {
-	           				parseState = InternalParseState.ST_IN_BODY;
-	           			}
-	           		} else if (parseState.equals(InternalParseState.ST_IN_BODY)) {
-	           			if (Tag.isTagInHeader(tagId)) {
-	           				// may not receive a Header tag in the Body
-	           				System.out.println("Invalid tag received in body (" + tag + ")");
-	           				//TODO send Reject
-	           				continue;	           				
-	           			} else if (Tag.isTagInTrailer(tagId)) {
-	           				parseState = InternalParseState.ST_IN_TRAILER;
-	           			}
-	           			
-	           		} else if (parseState.equals(InternalParseState.ST_IN_TRAILER)) {
-	           			if (!Tag.isTagInTrailer(tagId)) {
-	           				// may not receive a tag in Header or Body
-	           				System.out.println("Invalid tag received in trailer (" + tag + ")");
-	           				//TODO send Reject
-	           				tag.setLength(0);
-	           				continue;	
-	           			}
-	           		}		        
-	           		
-	           		message.addTag(tagId, Tag.getTagValue(tag.toString()));
-	           		if (tagId.equals(CheckSum.TAG)) {
-	           			// last tag	           		
-	           			errMsg = validateMessage(message, sessionState);
-	           			if (errMsg != null) {
-	           				
-	           			}
-	           			message.clear();
-	           			parseState = InternalParseState.ST_START_NEW_MESSAGE;
-	           			nreceived++;
-	           			// TODO process messages ...
-	           		}
-		        }
-				
-			} catch (Exception e) {
-				logger.fatal(message, e);
-				e.printStackTrace();
+		try {
+			int c;
+			String errMsg;
+			buffIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));  				
+			while (true) {
+				tag = new StringBuilder();
+				c=buffIn.read();
+				while ((c != Constants.SOH) && (c != -1)) {
+					tag.append((char)c);
+					c=buffIn.read();
+				}	           		
+				if (c==-1) {					
+					logger.info("[" + this.name + "]" + ": client disconnected.");
+					return;
+				}
+
+				// read complete tag (id=value) ... validating it
+				logger.debug("received tag: " + tag);
+				errMsg = validateTag(tag.toString(), parseState);
+				if (errMsg != null) {
+					logger.error(errMsg);
+					sendReject(0, errMsg);
+					continue;
+				}
+				tagId = Tag.getTagId(tag.toString());
+				if ((message.getTags() != null) && (message.getTags().containsKey(tagId))) {
+					logger.error("[" + this.name + "]" + ": error: tag already received");
+					sendReject(0, errMsg);
+					continue;
+				}
+				// valid tag ... continue processing.
+				message.addTag(tagId, Tag.getTagValue(tag.toString())); 
+
+
+				if (parseState.equals(InternalParseState.ST_START_NEW_MESSAGE)) {
+					if (!tagId.equals(BeginString.TAG)) {
+						System.out.println("expecting tag " + BeginString.TAG + " (" + BeginString.NAME + ")");
+						// TODO send Reject		           		
+						continue;
+					}
+					parseState = InternalParseState.ST_IN_HEADER;
+				} else if (parseState.equals(InternalParseState.ST_IN_HEADER)) {	           			
+					if (Tag.isTagInTrailer(tagId)) {
+						// may not receive a Trailer tag in header
+						System.out.println("Invalid tag received in header (" + tag + ")");
+						//TODO send Reject
+						continue;
+					} else if (Tag.isTagInBody(tagId)) {
+						parseState = InternalParseState.ST_IN_BODY;
+					}
+				} else if (parseState.equals(InternalParseState.ST_IN_BODY)) {
+					if (Tag.isTagInHeader(tagId)) {
+						// may not receive a Header tag in the Body
+						System.out.println("Invalid tag received in body (" + tag + ")");
+						//TODO send Reject
+						continue;	           				
+					} else if (Tag.isTagInTrailer(tagId)) {
+						parseState = InternalParseState.ST_IN_TRAILER;
+					}
+
+				} else if (parseState.equals(InternalParseState.ST_IN_TRAILER)) {
+					if (!Tag.isTagInTrailer(tagId)) {
+						// may not receive a tag in Header or Body
+						System.out.println("Invalid tag received in trailer (" + tag + ")");
+						//TODO send Reject
+						tag.setLength(0);
+						continue;	
+					}
+				}		        
+
+				message.addTag(tagId, Tag.getTagValue(tag.toString()));
+				if (tagId.equals(CheckSum.TAG)) {
+					// complete message received ... processing it
+					logger.info("[" + this.name + "]" + "Rec");
+					// last tag	           		
+					errMsg = validateMessage(message, sessionState);
+					if (errMsg != null) {
+
+					}
+					// TODO process messages ...
+					message.clear();
+					parseState = InternalParseState.ST_START_NEW_MESSAGE;
+					nreceived++;
+				}
 			}
+
+		} catch (IOException e) {
+			logger.fatal("A severe I/O communication occured (" + e.getMessage() + "). Aborting. ", e);
+		}
 	}
 	
 	private void sendReject(int id, String text) {
@@ -157,12 +158,17 @@ public class FixServer extends Thread {
 		// send the reject ...
 	}
 
-	private String validateTag(String tag) {
+	private String validateTag(String tag, InternalParseState parseState) {
 		// syntax validation
 		if (!Tag.isValidTagStructure(tag)) {	           			
    			return "invalid tag ("+ tag + ") received";
    		}
+		
+		// is the tag valid at this point of the stream ?
+		
+		
 		// TODO semantic validation
+		//
 		
 		return null;
 	}
