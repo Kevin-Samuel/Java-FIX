@@ -3,13 +3,21 @@ package be.tritschler.fix.core.tags;
 import be.tritschler.fix.core.tags.v40.BeginString;
 import be.tritschler.fix.utils.StringUtils;
 
-
-
 public abstract class Tag {
-	
-	protected String id;
-	protected String name;
+	// required
+	protected final String id;
+	// optional
 	protected String value;
+	protected String name;
+	
+	public Tag(String id) {
+		this.id = id;		
+	}
+	
+	public Tag(String id, String value) {
+		this.id = id;
+		this.value = value;
+	}
 	
 	public Tag(String id, String name, String value) {
 		this.id = id;
