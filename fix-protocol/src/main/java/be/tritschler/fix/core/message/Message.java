@@ -82,6 +82,7 @@ public class FixServer extends Thread {
 	           		}
 	           		
 	           		// read complete tag (id=value)
+	           		logger.debug("received " + tag);
 	           		errMsg = validateTag(tag.toString());
 	           		if (errMsg != null) {
 	           			logger.error(errMsg);
@@ -89,7 +90,6 @@ public class FixServer extends Thread {
 	           			// continue or reset connection ????
 	           			continue;
 	           		}
-	           		logger.debug("received " + tag);
 	           		tagId = Tag.getTagId(tag.toString());
 	           		if (message.getTags().containsKey(tagId)) {
 	           			// error: tag already received
