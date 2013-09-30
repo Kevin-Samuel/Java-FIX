@@ -57,7 +57,6 @@ public class FixServer extends Thread {
 		InternalParseState parseState = InternalParseState.ST_START_NEW_MESSAGE;
 		SessionState sessionState = SessionState.WAIT_LOGON;
 		StringBuilder tag;
-		StringBuilder msgIn = new StringBuilder();
 		String tagId = "";		
 		Message message = new Message();				
 		System.out.println("------- " + name + " started -------");
@@ -67,9 +66,6 @@ public class FixServer extends Thread {
 				String errMsg;
 				buffIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));  				
 		        while (true) {
-		        	if (parseState.equals(InternalParseState.ST_START_NEW_MESSAGE)) {
-		        		msgIn.setLength(0);
-		        	}
 		        	tag = new StringBuilder();
 		        	c=buffIn.read();
 	           		while ((c != Constants.SOH) && (c != -1)) {
@@ -90,9 +86,10 @@ public class FixServer extends Thread {
 	           			continue;
 	           		}
 	           		tagId = Tag.getTagId(tag.toString());
-	           		if (message.getTags().containsKey(tagId)) {
+	           		if ((message.getTags() != null) && (message.getTags().containsKey(tagId))) {
 	           			logger.error("error: tag already received");
 	           			sendReject(0, errMsg);
+	           			continue;
 	           		}
 	           		
 	           		message.addTag(tagId, Tag.getTagValue(tag.toString())); 
@@ -135,7 +132,6 @@ public class FixServer extends Thread {
 	           			}
 	           		}		        
 	           		
-	           		msgIn.append((char)Constants.SOH);
 	           		message.addTag(tagId, Tag.getTagValue(tag.toString()));
 	           		if (tagId.equals(CheckSum.TAG)) {
 	           			// last tag	           		
@@ -145,14 +141,13 @@ public class FixServer extends Thread {
 	           			}
 	           			message.clear();
 	           			parseState = InternalParseState.ST_START_NEW_MESSAGE;
-	           			msgIn.setLength(0);
 	           			nreceived++;
 	           			// TODO process messages ...
 	           		}
 		        }
 				
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				logger.fatal(message, e);
 				e.printStackTrace();
 			}
 	}
