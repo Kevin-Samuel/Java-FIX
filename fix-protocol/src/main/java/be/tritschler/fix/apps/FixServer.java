@@ -28,15 +28,12 @@ public class FixServer extends Thread {
 	private BufferedReader buffIn;
 	private Socket socket;
 	private long nreceived = 0;
-//	private int sessionState;
+	private long nvalid = 0;
 	
-	// internal parsing state
 	private enum InternalParseState {
 		ST_START_NEW_MESSAGE, ST_IN_HEADER, ST_IN_BODY,ST_IN_TRAILER;
 	}
    	
-	private final int SESSION_INIT = 0;
-	private final int SESSION_ESTABLISHED = 1;
 	
 	public FixServer(String name, Socket socket) {
 		this.name = name;
@@ -79,10 +76,10 @@ public class FixServer extends Thread {
 				}
 
 				// read complete tag (id=value) ... validating it
-				logger.debug("received tag: " + tag);
+				logger.debug("[" + this.name + "]" + "received tag: " + tag);
 				errMsg = validateTag(tag.toString(), parseState);
 				if (errMsg != null) {
-					logger.error(errMsg);
+					logger.error("[" + this.name + "]" + ": " + errMsg);
 					sendReject(0, errMsg);
 					continue;
 				}
@@ -92,51 +89,12 @@ public class FixServer extends Thread {
 					sendReject(0, errMsg);
 					continue;
 				}
-				// valid tag ... continue processing.
-				message.addTag(tagId, Tag.getTagValue(tag.toString())); 
 
-
-				if (parseState.equals(InternalParseState.ST_START_NEW_MESSAGE)) {
-					if (!tagId.equals(BeginString.TAG)) {
-						System.out.println("expecting tag " + BeginString.TAG + " (" + BeginString.NAME + ")");
-						// TODO send Reject		           		
-						continue;
-					}
-					parseState = InternalParseState.ST_IN_HEADER;
-				} else if (parseState.equals(InternalParseState.ST_IN_HEADER)) {	           			
-					if (Tag.isTagInTrailer(tagId)) {
-						// may not receive a Trailer tag in header
-						System.out.println("Invalid tag received in header (" + tag + ")");
-						//TODO send Reject
-						continue;
-					} else if (Tag.isTagInBody(tagId)) {
-						parseState = InternalParseState.ST_IN_BODY;
-					}
-				} else if (parseState.equals(InternalParseState.ST_IN_BODY)) {
-					if (Tag.isTagInHeader(tagId)) {
-						// may not receive a Header tag in the Body
-						System.out.println("Invalid tag received in body (" + tag + ")");
-						//TODO send Reject
-						continue;	           				
-					} else if (Tag.isTagInTrailer(tagId)) {
-						parseState = InternalParseState.ST_IN_TRAILER;
-					}
-
-				} else if (parseState.equals(InternalParseState.ST_IN_TRAILER)) {
-					if (!Tag.isTagInTrailer(tagId)) {
-						// may not receive a tag in Header or Body
-						System.out.println("Invalid tag received in trailer (" + tag + ")");
-						//TODO send Reject
-						tag.setLength(0);
-						continue;	
-					}
-				}		        
-
+				// valid tag ... continue processing. 
 				message.addTag(tagId, Tag.getTagValue(tag.toString()));
 				if (tagId.equals(CheckSum.TAG)) {
 					// complete message received ... processing it
-					logger.info("[" + this.name + "]" + "Rec");
-					// last tag	           		
+					logger.info("[" + this.name + "]" + ": received message :" + message.toString());
 					errMsg = validateMessage(message, sessionState);
 					if (errMsg != null) {
 
@@ -149,22 +107,39 @@ public class FixServer extends Thread {
 			}
 
 		} catch (IOException e) {
-			logger.fatal("A severe I/O communication occured (" + e.getMessage() + "). Aborting. ", e);
+			logger.fatal("[" + this.name + "]" + ": severe I/O communication occured (" + e.getMessage() + "). Aborting. ", e);
 		}
 	}
 	
 	private void sendReject(int id, String text) {
+		assert (text != null);
 		Reject reject = new Reject.Builder(id).text(text).build();
 		// send the reject ...
 	}
 
+	// TODO: move in the Tag class ??
 	private String validateTag(String tag, InternalParseState parseState) {
-		// syntax validation
+		assert ((tag != null) && (parseState != null));
+		// syntax validation(tag=value)
 		if (!Tag.isValidTagStructure(tag)) {	           			
-   			return "invalid tag ("+ tag + ") received";
-   		}
-		
+			return "invalid tag ("+ tag + ") received";
+		}
+		String tagId = Tag.getTagId(tag.toString());
+
 		// is the tag valid at this point of the stream ?
+		switch (parseState) {
+			case ST_START_NEW_MESSAGE:
+				if (!tagId.equals(BeginString.TAG)) {
+					return "expecting tag " + BeginString.TAG + " (" + BeginString.NAME + ")";
+				}
+			case ST_IN_HEADER:
+				// TODO: check given tag is allowed in header ...
+			case ST_IN_BODY:
+				// TODO : check given tag is allowed in body ...
+			case ST_IN_TRAILER:	
+				// TODO : check given tag is allowed in trailer ...
+		}
+		
 		
 		
 		// TODO semantic validation
@@ -173,21 +148,19 @@ public class FixServer extends Thread {
 		return null;
 	}
 	
-	public String validateMessage(Message message, SessionState sessionState) {
-	System.out.println("Received message " + nreceived + " : " + MsgType.getMessageName(message.getMsgtype()));
-	// validate the syntax
-	//	System.out.println(MessageHeader.isValidHeader(message));	
-	
-	
+	// TODO : move in the Message class ?
+	private String validateMessage(Message message, SessionState sessionState) {
+		assert ((message != null) && (sessionState != null));
+		// validate the syntax
+		//	System.out.println(MessageHeader.isValidHeader(message));	
 		switch (sessionState) {
 		case WAIT_LOGON:
 			// only a Logon must be received ....
 		case WAIT_MESSAGE:
 			// any message
 		}
-	
-	return null;
-}
+		return null;
+	}
 	
 	public static void main(String[] args) {
 		int port = 8080;
