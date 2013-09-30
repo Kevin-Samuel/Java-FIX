@@ -58,8 +58,7 @@ public class FixServer extends Thread {
 		SessionState sessionState = SessionState.WAIT_LOGON;
 		StringBuilder tag;
 		StringBuilder msgIn = new StringBuilder();
-		String tagId = "";
-//		List<Tag> tagList = new ArrayList<Tag>();		
+		String tagId = "";		
 		Message message = new Message();				
 		System.out.println("------- " + name + " started -------");
 		initLogging();
@@ -83,18 +82,17 @@ public class FixServer extends Thread {
 	           		}
 	           		
 	           		// read complete tag (id=value)
+	           		logger.debug("received " + tag);
 	           		errMsg = validateTag(tag.toString());
 	           		if (errMsg != null) {
 	           			logger.error(errMsg);
 	           			sendReject(0, errMsg);
-	           			// continue or reset connection ????
 	           			continue;
 	           		}
-	           		logger.debug("received " + tag);
 	           		tagId = Tag.getTagId(tag.toString());
 	           		if (message.getTags().containsKey(tagId)) {
-	           			// error: tag already received
-	           			logger.error("");
+	           			logger.error("error: tag already received");
+	           			sendReject(0, errMsg);
 	           		}
 	           		
 	           		message.addTag(tagId, Tag.getTagValue(tag.toString())); 
