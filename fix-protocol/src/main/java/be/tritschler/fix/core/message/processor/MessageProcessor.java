@@ -4,7 +4,7 @@ import be.tritschler.fix.core.message.Message;
 
 public interface MessageProcessor<T extends Message> {
 
-	void validate(final T message);
+	void validate();
 	
-	void process(final T message);
+	void process();
 }
