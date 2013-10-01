@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -21,7 +19,6 @@ import be.tritschler.fix.core.tags.Constants;
 import be.tritschler.fix.core.tags.MsgType;
 import be.tritschler.fix.core.tags.Tag;
 import be.tritschler.fix.core.tags.v40.BeginString;
-import be.tritschler.fix.core.tags.v40.TagFactory;
 
 public class FixServer extends Thread {
 	
@@ -49,7 +46,8 @@ public class FixServer extends Thread {
 		this.name = name;
 		this.socket = socket;
 		this.fixVersion = fixVersion;
-//		FixSession fixsess = new FixSession(name);		
+//		FixSession fixsess = new FixSession(name);
+		initLogging();
 	}
 	
 	private void initLogging() {
@@ -83,6 +81,7 @@ public class FixServer extends Thread {
 				}	           		
 				if (c==-1) {					
 					logger.info("[" + this.name + "]" + ": client disconnected.");
+					logger.info("[" + this.name + "]" + ": " + nreceived + ", " + nvalid);
 					return;
 				}
 
@@ -110,9 +109,9 @@ public class FixServer extends Thread {
 					logger.info("[" + this.name + "]" + ": received message :" + message.toString());
 					errMsg = validateMessage(message, sessionState);
 					if (errMsg != null) {
-						processMessage(message);
+						// TODO
 					} else {
-						// TODO process messages ...
+						processMessage(message);
 						message.clear();
 						parseState = InternalParseState.WAIT_BEGINSTRING;
 						nreceived++;
@@ -149,8 +148,7 @@ public class FixServer extends Thread {
 				}
 				if (Tag.getTagValue(tagId).equals("FIX.4.0")) {
 					return "invalid value for tag " + BeginString.TAG + " (" + BeginString.NAME + ") : received " + Tag.getTagValue(tagId) + " instead of " + fixVersion;
-				}
-				parseState = InternalParseState.WAIT_BODYLENGTH;
+				}				
 				return null;
 			case WAIT_BODYLENGTH:
 				if (!tagId.equals(BodyLength.TAG)) {
@@ -161,7 +159,7 @@ public class FixServer extends Thread {
 				if (!tagId.equals(MsgType.TAG)) {
 					return "expecting tag " + MsgType.TAG + " (" + BeginString.NAME + ")";
 				}
-				if (new MsgType(Tag.getTagValue(tagId)).isValid(tagId)) {
+				if (!new MsgType(Tag.getTagValue(tagId)).isValid(tagId)) {
 					return "tag " + MsgType.TAG + " (" + BeginString.NAME + ") has invalid contents: " + Tag.getTagValue(tagId);
 				}
 				return null;
@@ -211,6 +209,8 @@ public class FixServer extends Thread {
 			parseState = InternalParseState.WAIT_BODYLENGTH;
 		} else if (parseState.equals(InternalParseState.WAIT_BODYLENGTH)) {
 			parseState = InternalParseState.WAIT_MSG_TYPE;
+		} else if (parseState.equals(InternalParseState.WAIT_MSG_TYPE)) {
+			parseState = InternalParseState.ST_IN_HEADER;
 		} else if (parseState.equals(InternalParseState.ST_IN_HEADER)) {
 			//
 		}
