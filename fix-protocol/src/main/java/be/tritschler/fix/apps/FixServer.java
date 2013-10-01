@@ -10,9 +10,12 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import be.tritschler.fix.core.message.Logon;
 import be.tritschler.fix.core.message.Message;
 import be.tritschler.fix.core.message.Reject;
+import be.tritschler.fix.core.message.processors.LogonProcessor;
 import be.tritschler.fix.core.session.SessionState;
+import be.tritschler.fix.core.tags.BodyLength;
 import be.tritschler.fix.core.tags.CheckSum;
 import be.tritschler.fix.core.tags.Constants;
 import be.tritschler.fix.core.tags.MsgType;
@@ -24,20 +27,28 @@ public class FixServer extends Thread {
 	
 	public static final Logger logger = Logger.getLogger(FixClient.class); 
 	
-	private String name;
+	private final String name;
 	private BufferedReader buffIn;
 	private Socket socket;
 	private long nreceived = 0;
 	private long nvalid = 0;
+	private final String fixVersion;
+	private InternalParseState parseState;
 	
 	private enum InternalParseState {
-		ST_START_NEW_MESSAGE, ST_IN_HEADER, ST_IN_BODY,ST_IN_TRAILER;
+		WAIT_BEGINSTRING,		// expects tag  8 (always 1st tag)
+		WAIT_BODYLENGTH,		// expects tag  9 (always 2nd tag)
+		WAIT_MSG_TYPE,			// expects tag 35 (always 3rd tag)
+		ST_IN_HEADER,
+		ST_IN_BODY,
+		ST_IN_TRAILER;
 	}
    	
 	
-	public FixServer(String name, Socket socket) {
+	public FixServer(String name, Socket socket, String fixVersion) {
 		this.name = name;
 		this.socket = socket;
+		this.fixVersion = fixVersion;
 //		FixSession fixsess = new FixSession(name);		
 	}
 	
@@ -52,7 +63,7 @@ public class FixServer extends Thread {
 	}	
 		
 	public void run() {
-		InternalParseState parseState = InternalParseState.ST_START_NEW_MESSAGE;
+		parseState = InternalParseState.WAIT_BEGINSTRING;
 		SessionState sessionState = SessionState.WAIT_LOGON;
 		StringBuilder tag;
 		String tagId = "";		
@@ -88,6 +99,8 @@ public class FixServer extends Thread {
 					logger.error("[" + this.name + "]" + ": error: tag already received");
 					sendReject(0, errMsg);
 					continue;
+				} else {
+					setNextParseState();
 				}
 
 				// valid tag ... continue processing. 
@@ -97,12 +110,14 @@ public class FixServer extends Thread {
 					logger.info("[" + this.name + "]" + ": received message :" + message.toString());
 					errMsg = validateMessage(message, sessionState);
 					if (errMsg != null) {
-
+						processMessage(message);
+					} else {
+						// TODO process messages ...
+						message.clear();
+						parseState = InternalParseState.WAIT_BEGINSTRING;
+						nreceived++;
+						nvalid++;
 					}
-					// TODO process messages ...
-					message.clear();
-					parseState = InternalParseState.ST_START_NEW_MESSAGE;
-					nreceived++;
 				}
 			}
 
@@ -118,7 +133,7 @@ public class FixServer extends Thread {
 	}
 
 	// TODO: move in the Tag class ??
-	private String validateTag(String tag, InternalParseState parseState) {
+	private String validateTag(final String tag, InternalParseState parseState) {
 		assert ((tag != null) && (parseState != null));
 		// syntax validation(tag=value)
 		if (!Tag.isValidTagStructure(tag)) {	           			
@@ -128,10 +143,28 @@ public class FixServer extends Thread {
 
 		// is the tag valid at this point of the stream ?
 		switch (parseState) {
-			case ST_START_NEW_MESSAGE:
+			case WAIT_BEGINSTRING:
 				if (!tagId.equals(BeginString.TAG)) {
 					return "expecting tag " + BeginString.TAG + " (" + BeginString.NAME + ")";
 				}
+				if (Tag.getTagValue(tagId).equals("FIX.4.0")) {
+					return "invalid value for tag " + BeginString.TAG + " (" + BeginString.NAME + ") : received " + Tag.getTagValue(tagId) + " instead of " + fixVersion;
+				}
+				parseState = InternalParseState.WAIT_BODYLENGTH;
+				return null;
+			case WAIT_BODYLENGTH:
+				if (!tagId.equals(BodyLength.TAG)) {
+					return "expecting tag " + BodyLength.TAG + " (" + BeginString.NAME + ")";
+				}
+				return null;
+			case WAIT_MSG_TYPE:
+				if (!tagId.equals(MsgType.TAG)) {
+					return "expecting tag " + MsgType.TAG + " (" + BeginString.NAME + ")";
+				}
+				if (new MsgType(Tag.getTagValue(tagId)).isValid(tagId)) {
+					return "tag " + MsgType.TAG + " (" + BeginString.NAME + ") has invalid contents: " + Tag.getTagValue(tagId);
+				}
+				return null;
 			case ST_IN_HEADER:
 				// TODO: check given tag is allowed in header ...
 			case ST_IN_BODY:
@@ -139,7 +172,6 @@ public class FixServer extends Thread {
 			case ST_IN_TRAILER:	
 				// TODO : check given tag is allowed in trailer ...
 		}
-		
 		
 		
 		// TODO semantic validation
@@ -152,7 +184,6 @@ public class FixServer extends Thread {
 	private String validateMessage(Message message, SessionState sessionState) {
 		assert ((message != null) && (sessionState != null));
 		// validate the syntax
-		//	System.out.println(MessageHeader.isValidHeader(message));	
 		switch (sessionState) {
 		case WAIT_LOGON:
 			// only a Logon must be received ....
@@ -160,6 +191,31 @@ public class FixServer extends Thread {
 			// any message
 		}
 		return null;
+	}
+	
+	private void processMessage(Message message) {
+		assert ((message != null) && (message.getMsgtype() != null));
+		String msgType = message.getMsgtype();	
+		// wait java7 String in switches lol
+		if (msgType.equals(Logon.TYPE)) {
+			LogonProcessor processor = new LogonProcessor(message);
+			processor.process();
+		}
+		//
+	}
+
+	// TODO : move into Enum ?
+	private void setNextParseState() {
+		String currentParseState = parseState.toString();
+		if (parseState.equals(InternalParseState.WAIT_BEGINSTRING)) {
+			parseState = InternalParseState.WAIT_BODYLENGTH;
+		} else if (parseState.equals(InternalParseState.WAIT_BODYLENGTH)) {
+			parseState = InternalParseState.WAIT_MSG_TYPE;
+		} else if (parseState.equals(InternalParseState.ST_IN_HEADER)) {
+			//
+		}
+		// TODO continue ...
+		logger.debug("setNextState: " + currentParseState + " -> " + parseState.toString());
 	}
 	
 	public static void main(String[] args) {
@@ -172,7 +228,7 @@ public class FixServer extends Thread {
 	            Socket socket = serverSocket.accept();
 	            i++;
 	            System.out.println("Client connected " + socket.getRemoteSocketAddress());
-	            new FixServer("Server " + i, socket).start();	            
+	            new FixServer("Server " + i, socket, "FIX.4.0").start();	            
 	        }
 		} catch (Exception e) {
 			e.printStackTrace();
