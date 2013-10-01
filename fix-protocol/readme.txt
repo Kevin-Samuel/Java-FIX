@@ -7,7 +7,7 @@ Principles
 
 Technologies:
 * Java 7
-* Maven 3
+* Maven 3 with modules
 * Log4J
 * Ehcache
 * JMX managed
