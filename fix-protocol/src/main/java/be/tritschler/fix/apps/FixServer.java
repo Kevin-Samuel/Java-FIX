@@ -22,7 +22,7 @@ import be.tritschler.fix.core.tags.v40.BeginString;
 
 public class FixServer extends Thread {
 	
-	public static final Logger logger = Logger.getLogger(FixClient.class); 
+	private static final Logger logger = Logger.getLogger(FixClient.class); 
 	
 	private final String name;
 	private BufferedReader buffIn;
@@ -86,7 +86,7 @@ public class FixServer extends Thread {
 				}
 
 				// read complete tag (id=value) ... validating it
-				logger.debug("[" + this.name + "]" + "received tag: " + tag);
+				logger.trace("[" + this.name + "]" + "received tag: " + tag);
 				errMsg = validateTag(tag.toString(), parseState);
 				if (errMsg != null) {
 					logger.error("[" + this.name + "]" + ": " + errMsg);
@@ -215,7 +215,7 @@ public class FixServer extends Thread {
 			//
 		}
 		// TODO continue ...
-		logger.debug("setNextState: " + currentParseState + " -> " + parseState.toString());
+		logger.trace("[" + this.name + "]" + ": setNextState: " + currentParseState + " -> " + parseState.toString());
 	}
 	
 	public static void main(String[] args) {
@@ -228,7 +228,7 @@ public class FixServer extends Thread {
 	            Socket socket = serverSocket.accept();
 	            i++;
 	            System.out.println("Client connected " + socket.getRemoteSocketAddress());
-	            new FixServer("Server " + i, socket, "FIX.4.0").start();	            
+	            new FixServer("Server " + i, socket, "FIX.4.0").start();
 	        }
 		} catch (Exception e) {
 			e.printStackTrace();
