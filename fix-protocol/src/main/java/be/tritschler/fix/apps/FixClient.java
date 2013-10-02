@@ -10,6 +10,7 @@ import java.net.Socket;
 import be.tritschler.fix.core.message.HeartBeat;
 import be.tritschler.fix.core.message.Message;
 import be.tritschler.fix.core.session.FixSession;
+import be.tritschler.fix.core.tags.CheckSum;
 import be.tritschler.fix.core.tags.ClOrdID;
 import be.tritschler.fix.core.tags.HandInst;
 import be.tritschler.fix.core.tags.OrdType;
@@ -18,7 +19,7 @@ import be.tritschler.fix.core.tags.Side;
 import be.tritschler.fix.core.tags.Symbol;
 
 
-public class FIXClient {
+public class FixClient {
 		
 	private static int clorderid = 1;
 	
@@ -37,13 +38,12 @@ public class FIXClient {
 		Message message = new Message();
 		
 		// body
-		message.setTag(ClOrdID.TAG, clorderid+"");
-		message.setTag(HandInst.TAG, HandInst.TYPE_AUTO_PUBLIC);
-		message.setTag(Symbol.TAG, "IBM");
-		message.setTag(Side.TAG, Side.SIDE_BUY);
-		message.setTag(OrderQty.TAG, "10");
-		message.setTag(OrdType.TAG, OrdType.MARKET);
-		
+		message.addTag(ClOrdID.TAG, clorderid+"");
+		message.addTag(HandInst.TAG, HandInst.TYPE_AUTO_PUBLIC);
+		message.addTag(Symbol.TAG, "IBM");
+		message.addTag(Side.TAG, Side.SIDE_BUY);
+		message.addTag(OrderQty.TAG, "10");
+		message.addTag(OrdType.TAG, OrdType.MARKET);		
 		clorderid++;
 
 		return message;
