@@ -14,16 +14,18 @@ public class NewOrderSingle extends Message {
 	
 	public static final String TYPE = MsgType.TYPE_NEW_ORDER_SINGLE;
 	
-	public NewOrderSingle(String clorderid) {
+	public NewOrderSingle() {
 		
+		// header
+		buildHeader(NewOrderSingle.TYPE);
 		
 		// body
-		setTag(ClOrdID.TAG, clorderid+"");
-		setTag(HandInst.TAG, HandInst.TYPE_AUTO_PUBLIC);
-		setTag(Symbol.TAG, "IBM");
-		setTag(Side.TAG, Side.SIDE_BUY);
-		setTag(OrderQty.TAG, "10");
-		setTag(OrdType.TAG, OrdType.MARKET);
+		addTag(ClOrdID.TAG, "xxx123");
+		addTag(HandInst.TAG, HandInst.TYPE_AUTO_PUBLIC);
+		addTag(Symbol.TAG, "IBM");
+		addTag(Side.TAG, Side.SIDE_BUY);
+		addTag(OrderQty.TAG, "10");
+		addTag(OrdType.TAG, OrdType.MARKET);
 	
 	}
 	
