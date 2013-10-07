@@ -1,5 +1,7 @@
 package be.tritschler.fix.core.message.processors;
 
+import org.apache.log4j.Logger;
+
 import be.tritschler.fix.core.message.Logon;
 import be.tritschler.fix.core.message.Message;
 
@@ -11,6 +13,8 @@ import be.tritschler.fix.core.message.Message;
  */
 public class LogonProcessor implements MessageProcessor<Logon>{
 
+	private static final Logger logger = Logger.getLogger(LogonProcessor.class);
+	
 	private Message message;
 	
 	public LogonProcessor(Message message) {
@@ -19,16 +23,14 @@ public class LogonProcessor implements MessageProcessor<Logon>{
 	
 	@Override
 	public void validate() {
-		// TODO Auto-generated method stub
+		logger.debug("validating message ...");
 		
 	}
 
 	@Override
-	public void process() {
-		// TODO Auto-generated method stub
-		// validate
-		
-		//
+	public void process() {	
+		validate();
+		logger.debug("processing " + message);
 	}
 
 }
