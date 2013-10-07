@@ -8,6 +8,7 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import be.tritschler.fix.core.message.HeartBeat;
 import be.tritschler.fix.core.message.Logon;
 import be.tritschler.fix.core.message.Message;
 import be.tritschler.fix.core.message.Reject;
@@ -198,8 +199,11 @@ public class FixServer extends Thread {
 		if (msgType.equals(Logon.TYPE)) {
 			LogonProcessor processor = new LogonProcessor(message);
 			processor.process();
+		} else if (msgType.equals(HeartBeat.TYPE)) {
+			
 		}
-		//
+		
+		// TODO complete with all messgaes types
 	}
 
 	// TODO : move into Enum ?
