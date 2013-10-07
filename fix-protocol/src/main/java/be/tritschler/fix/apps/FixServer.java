@@ -11,8 +11,10 @@ import org.apache.log4j.Logger;
 import be.tritschler.fix.core.message.HeartBeat;
 import be.tritschler.fix.core.message.Logon;
 import be.tritschler.fix.core.message.Message;
+import be.tritschler.fix.core.message.NewOrderSingle;
 import be.tritschler.fix.core.message.Reject;
 import be.tritschler.fix.core.message.processors.LogonProcessor;
+import be.tritschler.fix.core.message.processors.NewOrderSingleProcessor;
 import be.tritschler.fix.core.session.SessionState;
 import be.tritschler.fix.core.tags.BodyLength;
 import be.tritschler.fix.core.tags.CheckSum;
@@ -201,6 +203,9 @@ public class FixServer extends Thread {
 			processor.process();
 		} else if (msgType.equals(HeartBeat.TYPE)) {
 			
+		} else if (msgType.equals(NewOrderSingle.TYPE)) {
+			NewOrderSingleProcessor processor = new NewOrderSingleProcessor(message);
+			processor.process();
 		}
 		
 		// TODO complete with all messgaes types
