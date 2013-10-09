@@ -1,7 +1,5 @@
 package be.tritschler.fix.apps;
 
-
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
@@ -18,6 +16,9 @@ import be.tritschler.fix.core.tags.OrderQty;
 import be.tritschler.fix.core.tags.Side;
 import be.tritschler.fix.core.tags.Symbol;
 
+/**
+ * Single threaded FIX client (initiates the connection and starts the session handshake)
+ * */
 
 public class FixClient {
 		
