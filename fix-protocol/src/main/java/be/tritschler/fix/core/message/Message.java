@@ -1,209 +1,153 @@
-package be.tritschler.fix.apps;
+package be.tritschler.fix.core.message;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import org.apache.log4j.Logger;
-
-import be.tritschler.fix.core.message.Message;
-import be.tritschler.fix.core.message.Reject;
-import be.tritschler.fix.core.session.SessionState;
+import be.tritschler.fix.core.tags.BodyLength;
 import be.tritschler.fix.core.tags.CheckSum;
 import be.tritschler.fix.core.tags.Constants;
+import be.tritschler.fix.core.tags.DeliverToCompID;
+import be.tritschler.fix.core.tags.MsgSeqNum;
 import be.tritschler.fix.core.tags.MsgType;
-import be.tritschler.fix.core.tags.Tag;
+import be.tritschler.fix.core.tags.OnBehalfOfCompID;
+import be.tritschler.fix.core.tags.SecureData;
+import be.tritschler.fix.core.tags.SecureDataLen;
+import be.tritschler.fix.core.tags.SenderCompID;
+import be.tritschler.fix.core.tags.SendingTime;
+import be.tritschler.fix.core.tags.Signature;
+import be.tritschler.fix.core.tags.SignatureLength;
+import be.tritschler.fix.core.tags.TargetCompID;
 import be.tritschler.fix.core.tags.v40.BeginString;
-import be.tritschler.fix.core.tags.v40.TagFactory;
 
-public class FixServer extends Thread {
+
+public class Message {
+
+	protected Header header;
+	protected Trailer trailer; 	
+	protected String msgtype;	
 	
-	public static final Logger logger = Logger.getLogger(FixClient.class); 
-	
-	private String name;
-	private BufferedReader buffIn;
-	private Socket socket;
-	private long nreceived = 0;
-//	private int sessionState;
-	
-	// internal parsing state
-	private enum InternalParseState {
-		ST_START_NEW_MESSAGE, ST_IN_HEADER, ST_IN_BODY,ST_IN_TRAILER;
-	}
-   	
-	private final int SESSION_INIT = 0;
-	private final int SESSION_ESTABLISHED = 1;
-	
-	public FixServer(String name, Socket socket) {
-		this.name = name;
-		this.socket = socket;
-//		FixSession fixsess = new FixSession(name);		
+	private Map<String, String> tags = new LinkedHashMap<String, String>();
+			
+	public void clear() {
+		tags.clear();
 	}
 	
-	private static void initLogging() {
-		boolean init = true;
-		// TODO 
-		if (init) {
-			logger.info("logging initialized.");
-		} else {
-			System.out.println("--------- error initializing the Logging system ------");
-		}
-	}	
-		
-	public void run() {
-		InternalParseState parseState = InternalParseState.ST_START_NEW_MESSAGE;
-		SessionState sessionState = SessionState.WAIT_LOGON;
-		StringBuilder tag;
-		StringBuilder msgIn = new StringBuilder();
-		String tagId = "";		
-		Message message = new Message();				
-		System.out.println("------- " + name + " started -------");
-		initLogging();
-			try {
-				int c;
-				String errMsg;
-				buffIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));  				
-		        while (true) {
-		        	if (parseState.equals(InternalParseState.ST_START_NEW_MESSAGE)) {
-		        		msgIn.setLength(0);
-		        	}
-		        	tag = new StringBuilder();
-		        	c=buffIn.read();
-	           		while ((c != Constants.SOH) && (c != -1)) {
-	           			tag.append((char)c);
-	           			c=buffIn.read();
-	           		}	           		
-	           		if (c==-1) {
-	           			System.out.println("Client disconnected ...");
-	           			return;
-	           		}
-	           		
-	           		// read complete tag (id=value)
-	           		logger.debug("received " + tag);
-	           		errMsg = validateTag(tag.toString());
-	           		if (errMsg != null) {
-	           			logger.error(errMsg);
-	           			sendReject(0, errMsg);
-	           			// continue or reset connection ????
-	           			continue;
-	           		}
-	           		tagId = Tag.getTagId(tag.toString());
-	           		if (message.getTags().containsKey(tagId)) {
-	           			// error: tag already received
-	           			logger.error("");
-	           		}
-	           		
-	           		message.addTag(tagId, Tag.getTagValue(tag.toString())); 
-	           			           	
-	           		
-	           		if (parseState.equals(InternalParseState.ST_START_NEW_MESSAGE)) {
-	           			if (!tagId.equals(BeginString.TAG)) {
-		           			// expecting tag 8
-		           			System.out.println("expecting tag " + BeginString.TAG + " (" + BeginString.NAME + ")");
-		           			// TODO send Reject		           		
-		           			continue;
-	           			}
-	           			parseState = InternalParseState.ST_IN_HEADER;
-	           		} else if (parseState.equals(InternalParseState.ST_IN_HEADER)) {	           			
-	           			if (Tag.isTagInTrailer(tagId)) {
-	           				// may not receive a Trailer tag in header
-	           				System.out.println("Invalid tag received in header (" + tag + ")");
-	           				//TODO send Reject
-	           				continue;
-	           			} else if (Tag.isTagInBody(tagId)) {
-	           				parseState = InternalParseState.ST_IN_BODY;
-	           			}
-	           		} else if (parseState.equals(InternalParseState.ST_IN_BODY)) {
-	           			if (Tag.isTagInHeader(tagId)) {
-	           				// may not receive a Header tag in the Body
-	           				System.out.println("Invalid tag received in body (" + tag + ")");
-	           				//TODO send Reject
-	           				continue;	           				
-	           			} else if (Tag.isTagInTrailer(tagId)) {
-	           				parseState = InternalParseState.ST_IN_TRAILER;
-	           			}
-	           			
-	           		} else if (parseState.equals(InternalParseState.ST_IN_TRAILER)) {
-	           			if (!Tag.isTagInTrailer(tagId)) {
-	           				// may not receive a tag in Header or Body
-	           				System.out.println("Invalid tag received in trailer (" + tag + ")");
-	           				//TODO send Reject
-	           				tag.setLength(0);
-	           				continue;	
-	           			}
-	           		}		        
-	           		
-	           		msgIn.append((char)Constants.SOH);
-	           		message.addTag(tagId, Tag.getTagValue(tag.toString()));
-	           		if (tagId.equals(CheckSum.TAG)) {
-	           			// last tag	           		
-	           			errMsg = validateMessage(message, sessionState);
-	           			if (errMsg != null) {
-	           				
-	           			}
-	           			message.clear();
-	           			parseState = InternalParseState.ST_START_NEW_MESSAGE;
-	           			msgIn.setLength(0);
-	           			nreceived++;
-	           			// TODO process messages ...
-	           		}
-		        }
-				
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+	public String getMsgtype() {
+		return msgtype;
+	}
+
+	public void addTag(String tagid, String value) {
+		if ((tagid != null) && (value != null)) {
+			tags.put(tagid, value);
+			if (tagid.equals(MsgType.TAG)) {
+				msgtype = value;
 			}
+		}
 	}
 	
-	private void sendReject(int id, String text) {
-		Reject reject = new Reject.Builder(id).text(text).build();
-		// send the reject ...
+	@Override
+	public String toString() {
+		// TODO IMPLEMENT better
+		StringBuilder sbuilder = new StringBuilder();				
+		// computes the body lenght and checksum if needed (1st call of the method)
+		addTag(BodyLength.TAG, computeBodyLength()+"");
+		addTag(CheckSum.TAG, CheckSum.computeCheckSum(sbuilder.toString()));
+		for(String key: tags.keySet()) {
+			sbuilder.append(key).append(Constants.EQUAL).append(tags.get(key)).append((char)Constants.SOH);
+		}
+		return sbuilder.toString();
 	}
-
-	private String validateTag(String tag) {
-		// syntax validation
-		if (!Tag.isValidTagStructure(tag)) {	           			
-   			return "invalid tag ("+ tag + ") received";
-   		}
-		// TODO semantic validation
-		
+	
+	// TODO: implement
+	public Message unmarshall(byte[] stream) {
 		return null;
 	}
 	
-	public String validateMessage(Message message, SessionState sessionState) {
-	System.out.println("Received message " + nreceived + " : " + MsgType.getMessageName(message.getMsgtype()));
-	// validate the syntax
-	//	System.out.println(MessageHeader.isValidHeader(message));	
-	
-	
-		switch (sessionState) {
-		case WAIT_LOGON:
-			// only a Logon must be received ....
-		case WAIT_MESSAGE:
-			// any message
+	public byte[] marshall() {
+		StringBuilder sbuilder = new StringBuilder();		
+//		if (!isValid()) { return "invalid"; }
+		addTag(BodyLength.TAG, computeBodyLength()+"");
+		addTag(CheckSum.TAG, CheckSum.computeCheckSum(sbuilder.toString()));
+		for(String key: tags.keySet()) {
+			sbuilder.append(key).append(Constants.EQUAL).append(tags.get(key)).append(Constants.SOH);
 		}
+		//return sbuilder.toString().getBytes(StandardCharsets.US_ASCII);   ONLY with Java 1.7 :-(
+		try {
+			return sbuilder.toString().getBytes("US_ASCII");
+		} catch (UnsupportedEncodingException e) {
+			// DO NOTHIING because US_ASCII is valid ... remove the try/cath when upgradinde
+			return null;
+		}	 
+	}
 	
-	return null;
-}
+	public boolean isValid() {
+		return true;
+	}
 	
-	public static void main(String[] args) {
-		int port = 8080;
-		int i = 0;
-		try {			
-        	ServerSocket serverSocket = new ServerSocket(port);
-	        while(true) {
-	        	System.out.println("Listening on port "+ port + " ...");
-	            Socket socket = serverSocket.accept();
-	            i++;
-	            System.out.println("Client connected " + socket.getRemoteSocketAddress());
-	            new FixServer("Server " + i, socket).start();	            
-	        }
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println(e.getMessage());
+	protected void buildHeader(String msgType, String senderCompId, String targetCompId, String msgseqnum) {
+		addTag(BeginString.TAG, BeginString.VERSION);
+		addTag(BodyLength.TAG, "000"); // dummy length ... will be computed later
+		addTag(MsgType.TAG, msgType);
+		addTag(SenderCompID.TAG, senderCompId);
+		addTag(TargetCompID.TAG, targetCompId);
+		addTag(MsgSeqNum.TAG, msgseqnum);
+		addTag(SendingTime.TAG, SendingTime.getSendingTime());
+	}
+	
+	protected void buildHeader(String msgType) {
+		addTag(BeginString.TAG, BeginString.VERSION);
+		addTag(BodyLength.TAG, "000"); // dummy length ... will be computed later
+		addTag(MsgType.TAG, msgType);
+//		addTag(SenderCompID.TAG, senderCompId);
+//		addTag(TargetCompID.TAG, targetCompId);
+//		addTag(MsgSeqNum.TAG, msgseqnum);
+		addTag(SendingTime.TAG, SendingTime.getSendingTime());
+	}
+//	private void buildTrailer() {
+//		// SignatureLength
+//		// Signature
+//		setTag(CheckSum.TAG, "xxx");
+//	}		 
+	
+	private int computeBodyLength() {
+		int i=0;
+		for(String key: tags.keySet()) {
+			if ((!key.equals(BeginString.TAG)) &&
+				(!key.equals(BodyLength.TAG))  &&
+				(!key.equals(CheckSum.TAG))    &&
+				(!key.equals(Signature.TAG))   &&
+				(!key.equals(SignatureLength.TAG))) {
+				i+= key.length() + Constants.EQUAL.length() + tags.get(key).length() + 1;
+			}
 		}
+		return i;
+	}
+	
+//	public void printTags() {
+//		for(String key: tags.keySet()) {
+//			System.out.println(key + ": " + tags.get(key));
+//		}
+//	}
+	
+	// optional fields of the header 
+	public void setOnBehalfOfCompID(String value) {
+		addTag(OnBehalfOfCompID.TAG, value);
+	}
+	
+	public void setDeliverToCompID(String value) {
+		addTag(DeliverToCompID.TAG, value);
+	}
+	
+	public void setSecureData(String value) {
+		addTag(SecureData.TAG, value);
+		addTag(SecureDataLen.TAG, value.length()+"");
+	}
+	
+	
+	// optional fields of the trailer
+	// Signature (+ length)
+	public Map<String, String> getTags() {
+		return tags;
 	}
 }
