@@ -1,3 +1,5 @@
-InputStreamReader, OutputStreamWriter
+Socket :InputStreamReader, OutputStreamWriter
+JMS reader/writer + MDBean
 Single-threaded lib (jar)
+THread pool for server
 Fix Session: factory ?
