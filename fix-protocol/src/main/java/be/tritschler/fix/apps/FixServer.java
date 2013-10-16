@@ -1,6 +1,7 @@
 package be.tritschler.fix.apps;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
@@ -28,7 +29,8 @@ public class FixServer implements Runnable {
 	private static final Logger logger = Logger.getLogger(FixClient.class); 
 	
 	private final String name;
-	private BufferedReader buffIn;
+	private BufferedReader reader;
+	private BufferedWriter writer;
 	private Socket socket;
 	private long nreceived = 0;
 	private long nvalid = 0;
@@ -74,13 +76,13 @@ public class FixServer implements Runnable {
 		try {
 			int c;
 			String errMsg;
-			buffIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));  				
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));  				
 			while (true) {
 				tag = new StringBuilder();
-				c=buffIn.read();
+				c=reader.read();
 				while ((c != Constants.SOH) && (c != -1)) {
 					tag.append((char)c);
-					c=buffIn.read();
+					c=reader.read();
 				}	           		
 				if (c==-1) {					
 					logger.info("[" + this.name + "]" + ": client disconnected.");
