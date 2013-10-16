@@ -1,3 +1,4 @@
+Correct Maven pom.xml
 Socket :InputStreamReader, OutputStreamWriter
 JMS reader/writer + MDBean
 Single-threaded lib (jar)
