@@ -4,6 +4,7 @@ FIRST BETA VERSION AROUND DECEMBER 2013
 *****************************************************************
 
 Principles
+* Pragmatic approach : use recipes (f.e. patterns) BUT in a pragmatic way
 * Zero config : use only default values
 * Cloud/Clustering design
 * Java coding standards, Effective Java Programming
