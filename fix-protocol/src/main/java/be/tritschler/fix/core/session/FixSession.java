@@ -1,21 +1,29 @@
 package be.tritschler.fix.core.session;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
+import be.tritschler.fix.apps.FixClient;
 import be.tritschler.fix.core.message.Logon;
 import be.tritschler.fix.core.message.Message;
 import be.tritschler.fix.core.tags.EncryptMethod;
 
 
 public class FixSession {
+	
+	private static final Logger logger = Logger.getLogger(FixSession.class);
+	
 	private String name;
 	private String senderCompId;
 	private String targetCompId;			     
-	private	int msgseqnum;
-	private DataOutputStream outStream;
-	private BufferedReader inStream;
+	private	int nbMessagesReceived = 0;
+	private int nbMessagesSent = 0;
+	private BufferedWriter writer;
+	private BufferedReader reader;
 	
 	// optional fields of the header
 	private String onBehalfOfCompId;
@@ -26,34 +34,38 @@ public class FixSession {
 	private String onBehalfOfSubId;
 	private String deliverToSubId;
 	
-	
-	public FixSession(String name, String senderCompId, String targetCompId, DataOutputStream os, BufferedReader is) {
+	public FixSession(String name, String senderCompId, String targetCompId, BufferedWriter os, BufferedReader is) {
 		this.name = name;		
 		this.senderCompId = senderCompId;
 		this.targetCompId = targetCompId;
-		this.msgseqnum = 1;
-		this.outStream = os;
-		this.inStream = is;
+		this.nbMessagesReceived = 1;
+		this.writer = os;
+		this.reader = is;
 	}
 
 	public void start() {		
 		Logon logon;
+		String message = null;
 		try {
-			logon = new Logon(senderCompId, targetCompId, msgseqnum);		
-			logon.setTag(EncryptMethod.TAG, EncryptMethod.TYPE_DES_EBC);
-			logon.setRawData("hhh");
-			logon.printTags();
-			System.out.println(logon.toString());
+			logon = new Logon(senderCompId, targetCompId, nbMessagesReceived);		
+			logon.addTag(EncryptMethod.TAG, EncryptMethod.TYPE_DES_EBC);
+			logon.setRawData("hhh");	
+			sendMessage(logon);
+
+			logger.info("sent message :" + message);
 			
-			outStream.writeBytes(logon.toString());
+			// wait answer ...
+			
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("exception sending message: " + message, e);			
 		}		
 	}
 	public void sendMessage(Message message) {
 		try {
-			outStream.writeBytes(message.toString());
-			msgseqnum++;
+//			outStream.writeBytes(message.toString());
+			writer.write(message.marshall());
+			writer.flush();
+			nbMessagesSent++;
 		} catch (IOException e) {			
 			e.printStackTrace();
 		}
