@@ -1,6 +1,6 @@
 Correct Maven pom.xml
-Socket :InputStreamReader, OutputStreamWriter
 JMS reader/writer + MDBean
 Single-threaded lib (jar)
 THread pool for server
+JMX Mgt
 Fix Session: factory ?
