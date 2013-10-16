@@ -4,9 +4,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import be.tritschler.fix.core.Constants;
 import be.tritschler.fix.core.tags.BodyLength;
 import be.tritschler.fix.core.tags.CheckSum;
-import be.tritschler.fix.core.tags.Constants;
 import be.tritschler.fix.core.tags.DeliverToCompID;
 import be.tritschler.fix.core.tags.MsgSeqNum;
 import be.tritschler.fix.core.tags.MsgType;
@@ -64,7 +64,7 @@ public class Message {
 		return null;
 	}
 	
-	public byte[] marshall() {
+	public String marshall() {
 		StringBuilder sbuilder = new StringBuilder();		
 //		if (!isValid()) { return "invalid"; }
 		addTag(BodyLength.TAG, computeBodyLength()+"");
@@ -72,13 +72,7 @@ public class Message {
 		for(String key: tags.keySet()) {
 			sbuilder.append(key).append(Constants.EQUAL).append(tags.get(key)).append(Constants.SOH);
 		}
-		//return sbuilder.toString().getBytes(StandardCharsets.US_ASCII);   ONLY with Java 1.7 :-(
-		try {
-			return sbuilder.toString().getBytes("US_ASCII");
-		} catch (UnsupportedEncodingException e) {
-			// DO NOTHIING because US_ASCII is valid ... remove the try/cath when upgradinde
-			return null;
-		}	 
+		return sbuilder.toString();
 	}
 	
 	public boolean isValid() {
