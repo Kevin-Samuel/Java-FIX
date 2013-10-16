@@ -8,6 +8,7 @@ import java.net.Socket;
 
 import org.apache.log4j.Logger;
 
+import be.tritschler.fix.core.Constants;
 import be.tritschler.fix.core.message.HeartBeat;
 import be.tritschler.fix.core.message.Logon;
 import be.tritschler.fix.core.message.Message;
@@ -18,12 +19,11 @@ import be.tritschler.fix.core.message.processors.NewOrderSingleProcessor;
 import be.tritschler.fix.core.session.SessionState;
 import be.tritschler.fix.core.tags.BodyLength;
 import be.tritschler.fix.core.tags.CheckSum;
-import be.tritschler.fix.core.tags.Constants;
 import be.tritschler.fix.core.tags.MsgType;
 import be.tritschler.fix.core.tags.Tag;
 import be.tritschler.fix.core.tags.v40.BeginString;
 
-public class FixServer extends Thread {
+public class FixServer implements Runnable {
 	
 	private static final Logger logger = Logger.getLogger(FixClient.class); 
 	
@@ -237,7 +237,7 @@ public class FixServer extends Thread {
 	            Socket socket = serverSocket.accept();
 	            i++;
 	            System.out.println("Client connected " + socket.getRemoteSocketAddress());
-	            new FixServer("Server " + i, socket, "FIX.4.0").start();
+	            new FixServer("Server " + i, socket, "FIX.4.0").run();
 	        }
 		} catch (Exception e) {
 			e.printStackTrace();
