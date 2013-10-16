@@ -1,42 +1,34 @@
 package be.tritschler.fix.apps;
 
+
+
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 
-import be.tritschler.fix.core.message.HeartBeat;
 import be.tritschler.fix.core.message.Message;
+import be.tritschler.fix.core.message.NewOrderSingle;
 import be.tritschler.fix.core.session.FixSession;
-import be.tritschler.fix.core.tags.CheckSum;
 import be.tritschler.fix.core.tags.ClOrdID;
 import be.tritschler.fix.core.tags.HandInst;
-import be.tritschler.fix.core.tags.OrdType;
+import be.tritschler.fix.core.tags.OrdType;			
 import be.tritschler.fix.core.tags.OrderQty;
 import be.tritschler.fix.core.tags.Side;
 import be.tritschler.fix.core.tags.Symbol;
 
-/**
- * Single threaded FIX client (initiates the connection and starts the session handshake)
- * */
 
 public class FixClient {
 		
 	private static int clorderid = 1;
 	
-	private static HeartBeat buildHeartBeat() {
-		HeartBeat heartBeat = null;
-		try {
-			
-		} catch (Exception e) {
-			
-		}
-		return heartBeat;
-	}
 	
 	
-	private static Message buildNewOrderSingle() {
-		Message message = new Message();
+	private static Message buildNewOrderSingle() {		
+		
+		NewOrderSingle message = new NewOrderSingle();
 		
 		// body
 		message.addTag(ClOrdID.TAG, clorderid+"");
@@ -52,13 +44,17 @@ public class FixClient {
 	
 	public static void main(String argv[]) throws Exception {
 				
-		Socket clientSocket = new Socket("localhost", 8080);
-		DataOutputStream os = new DataOutputStream(clientSocket.getOutputStream());
-		BufferedReader is = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		Socket clientSocket = new Socket("localhost", 8080);		
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "US-ASCII"));
+//		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), Charset.US-ASCII)); Java 7
+		BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "US-ASCII"));
+		
   
-		FixSession session1 = new FixSession("Session 1", "CLCB", "BONY", os, is);
+		// creates the session
+		FixSession session1 = new FixSession("Session 1", "CLCB", "BONY", writer, reader);
 		session1.start();
 		
+		// send business messages
 		for (int i=1; i<10; i++) {			
 			session1.sendMessage(buildNewOrderSingle());
 		}
