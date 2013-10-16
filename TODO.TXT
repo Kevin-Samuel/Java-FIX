@@ -1,6 +1,7 @@
-Correct Maven pom.xml
+Mavenize
 JMS reader/writer + MDBean
 Single-threaded lib (jar)
 THread pool for server
 JMX Mgt
 Fix Session: factory ?
+Reporting module: stats of use (nb messages,....) using jhtml for web pages generation
