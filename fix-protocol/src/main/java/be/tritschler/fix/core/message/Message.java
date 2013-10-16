@@ -1,6 +1,5 @@
 package be.tritschler.fix.core.message;
 
-import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
