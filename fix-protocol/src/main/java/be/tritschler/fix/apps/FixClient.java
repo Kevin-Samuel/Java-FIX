@@ -44,7 +44,8 @@ public class FixClient {
 	
 	public static void main(String argv[]) throws Exception {
 
-		String homeDir = 
+		// current dir is the default homedir
+		String homeDir = Paths.get("").toAbsolutePath().toString() + File.separator;
 		Properties defaultProps = new Properties();
 		try (FileInputStream in = new FileInputStream(homeDir + File.separator + "default.properties")) {			
 			defaultProps.load(in);
