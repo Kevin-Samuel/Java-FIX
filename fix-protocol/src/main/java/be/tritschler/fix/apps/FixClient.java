@@ -43,6 +43,13 @@ public class FixClient {
 	}
 	
 	public static void main(String argv[]) throws Exception {
+
+		String homeDir = 
+		Properties defaultProps = new Properties();
+		try (FileInputStream in = new FileInputStream(homeDir + File.separator + "default.properties")) {			
+			defaultProps.load(in);
+		}
+
 				
 		Socket clientSocket = new Socket("localhost", 8080);		
 		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "US-ASCII"));
