@@ -3,5 +3,5 @@ JMS reader/writer + MDBean
 Single-threaded lib (jar)
 THread pool for server
 JMX Mgt
-Fix Session: factory ?
+Fix Session
 Reporting module: stats of use (nb messages,....) using jhtml for web pages generation
