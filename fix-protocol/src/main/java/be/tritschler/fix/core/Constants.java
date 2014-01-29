@@ -4,6 +4,7 @@ package be.tritschler.fix.core;
 
 public class Constants {
 	
+// Start Of Header
 public static final char SOH = 1;
 	
 	public static final String EQUAL = "=";
